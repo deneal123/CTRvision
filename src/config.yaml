@@ -1,0 +1,33 @@
+
+dataset_download:
+  dataset_name: "paramaggarwal/fashion-product-images-small"
+  overwrite_existing: false
+  required_files:
+    - "images"
+    - "styles.csv"
+
+data:
+  data_path: "data/fashion-product-images-small"
+  image_folder: "images"
+  metadata_file: "styles.csv"
+  target_percentile: 0.8
+
+train:
+  experiment_type: "image"  # Варианты: "tabular", "image", "combined"
+  batch_size: 32
+  num_workers: 4
+  pin_memory: true
+  learning_rate: 0.001
+  num_epochs: 10
+  optimizer: "Adam"
+  seed: 42
+
+model:
+  image_model_name: "facebook/dinov2-base"
+  tabular_hidden_sizes: [512, 256]
+  combined_hidden_sizes: [512, 256]
+
+paths:
+  weights_path: "weights"
+  metrics_path: "metrics"
+  plots_path: "plots"

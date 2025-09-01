@@ -1,0 +1,36 @@
+[project]
+name = "ctr-vision"
+version = "0.1.0"
+description = "AI model that helps marketers choose better product photos by predicting their performance. Increases CTR and conversions."
+readme = "README.md"
+requires-python = ">=3.10.6"
+dependencies = [
+    "accelerate>=1.2.1",
+    "markupsafe==2.1.3",
+    "notebook>=7.4.5",
+    "numpy==1.26.4",
+    "opencv-python>=4.11.0.86",
+    "protobuf>=6.32.0",
+    "sentencepiece>=0.2.1",
+    "setuptools>=80.9.0",
+    "torch==2.1.1",
+    "torchaudio==2.1.1",
+    "torchvision==0.16.1",
+    "transformers>=4.55.2",
+    "dotenv>=0.9.9",
+    "pillow>=11.3.0",
+    "python-dotenv>=1.1.1",
+    "rich>=14.0.0",
+    "pyyaml>=6.0.2",
+    "load-dotenv>=0.1.0",
+    "requests>=2.32.5",
+    "scikit-learn>=1.7.1",
+    "kagglehub>=0.3.13",
+]
+
+
+[[tool.uv.index]]
+url = "https://download.pytorch.org/whl/cu121"
+
+[[tool.uv.index]]
+url = "https://pypi.org/simple"

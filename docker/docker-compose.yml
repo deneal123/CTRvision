@@ -1,0 +1,21 @@
+services:
+
+  str-vision:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+      args:
+        APP_TAG: ${APP_TAG:-dev}
+    container_name: ctr-vision
+    restart: on-failure:5
+    command: ["bash", "notebook.sh"]
+    volumes:
+      - ../logs:/app/logs
+    env_file:
+      - ../.env
+    networks:
+      - network
+
+networks:
+  network:
+    driver: bridge
