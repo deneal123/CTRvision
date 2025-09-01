@@ -26,8 +26,10 @@ train:
 
 model:
   image_model_name: "facebook/dinov2-base"
+  num_classes: 2  # Number of output classes
   tabular_hidden_sizes: [512, 256]
   combined_hidden_sizes: [512, 256]
+  unfreeze_layers: 0  # Number of layers to unfreeze in pretrained models
 
 paths:
   weights_path: "weights"

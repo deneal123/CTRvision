@@ -33,7 +33,10 @@ class CustomDataset(Dataset):
             self.metadata['target'] = (self.metadata['price'] >= threshold).astype(int)
         else:
             # Generate synthetic CTR target if no suitable column found
-            print(f"No target column '{target_column}' found. Generating synthetic CTR target...")
+            import warnings
+            warnings.warn(f"No target column '{target_column}' found and no 'price' column available. "
+                         f"Generating synthetic CTR target based on available product attributes.", 
+                         UserWarning)
             # Create a proxy CTR metric based on product attributes
             self.metadata['target'] = self._generate_ctr_target()
 

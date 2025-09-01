@@ -58,12 +58,23 @@ def initialize_model(config):
     )
     
     experiment_type = train_config['experiment_type']
+    num_classes = model_config.get('num_classes', 2)
+    unfreeze_layers = model_config.get('unfreeze_layers', 0)
+    
     if experiment_type == 'image':
-        model = ImageClassifier(model_config['image_model_name'], num_classes=2)
+        model = ImageClassifier(
+            model_config['image_model_name'], 
+            num_classes=num_classes, 
+            unfreeze_layers=unfreeze_layers
+        )
     elif experiment_type == 'tabular':
         sample = dataset[0]
         tabular_input_size = sample['tabular'].shape[0]
-        model = TabularClassifier(tabular_input_size, model_config['tabular_hidden_sizes'], num_classes=2)
+        model = TabularClassifier(
+            tabular_input_size, 
+            model_config['tabular_hidden_sizes'], 
+            num_classes=num_classes
+        )
     elif experiment_type == 'combined':
         sample = dataset[0]
         tabular_input_size = sample['tabular'].shape[0]
@@ -71,7 +82,8 @@ def initialize_model(config):
             model_config['image_model_name'],
             tabular_input_size,
             model_config['combined_hidden_sizes'],
-            num_classes=2
+            num_classes=num_classes,
+            unfreeze_layers=unfreeze_layers
         )
     else:
         raise ValueError(f"Unknown experiment type: {experiment_type}")
