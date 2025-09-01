@@ -13,8 +13,8 @@ logger = get_logger(__name__)
 
 def plot_results():
     config = ConfigParser().parse(path_to_config())
-    train_config = config['Train']
-    paths_config = config['Paths']
+    train_config = config['train']  # lowercase to match config.yaml
+    paths_config = config['paths']  # lowercase to match config.yaml
 
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
@@ -46,6 +46,9 @@ def plot_results():
             all_targets.extend(targets.cpu().numpy())
             all_predictions.extend(predicted.cpu().numpy())
 
+    # Ensure output directory exists
+    os.makedirs(paths_config['plots_path'], exist_ok=True)
+    
     cm = confusion_matrix(all_targets, all_predictions)
     disp = ConfusionMatrixDisplay(confusion_matrix=cm)
     disp.plot()
