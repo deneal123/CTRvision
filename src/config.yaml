@@ -10,6 +10,7 @@ data:
   data_path: "data/fashion-product-images-small"
   image_folder: "images"
   metadata_file: "styles.csv"
+  target_column: null  # Specify target column name, or null to auto-detect
   target_percentile: 0.8
 
 train:
@@ -20,12 +21,15 @@ train:
   learning_rate: 0.001
   num_epochs: 10
   optimizer: "Adam"
+  focal_loss_gamma: 2.0  # Gamma parameter for focal loss
   seed: 42
 
 model:
   image_model_name: "facebook/dinov2-base"
+  num_classes: 2  # Number of output classes
   tabular_hidden_sizes: [512, 256]
   combined_hidden_sizes: [512, 256]
+  unfreeze_layers: 0  # Number of layers to unfreeze in pretrained models
 
 paths:
   weights_path: "weights"
