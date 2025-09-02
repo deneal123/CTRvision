@@ -3,17 +3,16 @@ import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
 from transformers import AutoImageProcessor
-from src.model.classification_head import ImageClassifier, TabularClassifier, CombinedClassifier
-from src.model.focal_loss import FocalLoss
-from src.scripts.dataset import CustomDataset, collate_fn
-from src.utils.config_parser import ConfigParser
-from src import path_to_config, path_to_project
-from src.utils.custom_logging import get_logger
+from model.classification_head import ImageClassifier, TabularClassifier, CombinedClassifier
+from model.focal_loss import FocalLoss
+from scripts.dataset import CustomDataset, collate_fn
+from utils.config_parser import ConfigParser
+from __init__ import path_to_config, path_to_project
+from utils.custom_logging import get_logger
 
 logger = get_logger(__name__)
 
 def create_data_loaders(config):
-    """Create train, validation, and test data loaders."""
     data_config = config['data']
     train_config = config['train']
     
@@ -41,12 +40,10 @@ def create_data_loaders(config):
     return train_loader, val_loader, test_loader
 
 def initialize_model(config):
-    """Initialize model based on experiment type."""
     train_config = config['train']
     model_config = config['model']
     data_config = config['data']
     
-    # Create temporary dataset to get input dimensions
     transform = AutoImageProcessor.from_pretrained(model_config['image_model_name']).preprocess
     dataset = CustomDataset(
         data_path=os.path.join(path_to_project(), data_config['data_path']),
@@ -90,27 +87,34 @@ def initialize_model(config):
     
     return model
 
-def train():
-    config = ConfigParser().parse(path_to_config())
+def train_model(config_dict=None):
+    if config_dict is None:
+        config = ConfigParser().parse(path_to_config())
+    else:
+        config = config_dict
+    
     data_config = config['data']
     train_config = config['train']
     model_config = config['model']
     paths_config = config['paths']
 
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    logger.info(f"Using device: {device}")
 
-    # Use helper functions for consistency
     train_loader, val_loader, test_loader = create_data_loaders(config)
     model = initialize_model(config)
     model.to(device)
 
     optimizer = torch.optim.Adam(model.parameters(), lr=train_config['learning_rate'])
     
-    # Use FocalLoss instead of CrossEntropyLoss for better handling of imbalanced classes
     focal_loss_gamma = train_config.get('focal_loss_gamma', 2.0)
     criterion = FocalLoss(gamma=focal_loss_gamma)
 
     experiment_type = train_config['experiment_type']
+    
+    train_losses = []
+    val_losses = []
+    val_accuracies = []
     
     for epoch in range(train_config['num_epochs']):
         model.train()
@@ -135,6 +139,9 @@ def train():
 
             total_loss += loss.item()
 
+        avg_train_loss = total_loss / len(train_loader)
+        train_losses.append(avg_train_loss)
+        
         model.eval()
         val_loss = 0
         correct = 0
@@ -159,11 +166,36 @@ def train():
                 total += targets.size(0)
                 correct += (predicted == targets).sum().item()
 
+        avg_val_loss = val_loss / len(val_loader)
+        val_losses.append(avg_val_loss)
+        
         accuracy = 100 * correct / total
-        logger.info(f'Epoch {epoch+1}, Train Loss: {total_loss/len(train_loader):.4f}, Val Loss: {val_loss/len(val_loader):.4f}, Val Accuracy: {accuracy:.2f}%')
+        val_accuracies.append(accuracy)
+        
+        logger.info(f'Epoch {epoch+1}/{train_config["num_epochs"]}, '
+                   f'Train Loss: {avg_train_loss:.4f}, '
+                   f'Val Loss: {avg_val_loss:.4f}, '
+                   f'Val Accuracy: {accuracy:.2f}%')
 
     os.makedirs(paths_config['weights_path'], exist_ok=True)
-    torch.save(model.state_dict(), os.path.join(paths_config['weights_path'], f'{experiment_type}_model.pth'))
+    model_path = os.path.join(paths_config['weights_path'], f'{experiment_type}_model.pth')
+    torch.save(model.state_dict(), model_path)
+    logger.info(f"Model saved to {model_path}")
+    
+    os.makedirs(paths_config['metrics_path'], exist_ok=True)
+    metrics = {
+        'train_losses': train_losses,
+        'val_losses': val_losses,
+        'val_accuracies': val_accuracies,
+        'experiment_type': experiment_type,
+        'config': config
+    }
+    metrics_path = os.path.join(paths_config['metrics_path'], f'{experiment_type}_metrics.pt')
+    torch.save(metrics, metrics_path)
+    logger.info(f"Metrics saved to {metrics_path}")
+    
+    return model, metrics
+
 
 if __name__ == '__main__':
-    train()
+    train_model()

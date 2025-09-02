@@ -11,13 +11,6 @@ class FocalLoss(nn.Module):
         self.reduction = reduction
 
     def forward(self, inputs, targets):
-        """
-        Args:
-            inputs: Model predictions as logits, shape [batch_size, num_classes]
-            targets: Either:
-                  - Class indices, shape [batch_size], or
-                  - One-hot encoded targets, shape [batch_size, num_classes]
-        """
 
         if len(targets.shape) > 1 and targets.shape[1] > 1:
             targets = torch.argmax(targets, dim=1)
